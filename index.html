@@ -1,104 +1,68 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<div class="action-buttons">
+                    <a id="pdf-download" href="#" class="btn-action btn-pdf" target="_blank">📥 Download PDF</a>
+                    <a id="excel-download" href="#" class="btn-action btn-excel" target="_blank">📊 Download Excel</a>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <title>Student PDF - تحويل الصور إلى نص وملفات</title>
+    <script>
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbypcWUrkJTgcSxB05noWOXEuiG8tMwF0ZLbYhk9aaNZPQZ2G4ook6XHHggslLFf30tZ/exec";
 
-    <meta name="description"
-          content="حوّل صور الكتب والمحاضرات إلى نص قابل للتعديل بسهولة، واستخرج النص العربي من الصور.">
-
-    <!-- مكتبة OCR -->
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
+        function previewImages(event) {
+            const files = event.target.files;
+            const container = document.getElementById('image-preview-container');
+            container.innerHTML = '';
+            
+            if (files.length > 0) {
+                document.getElementById('preview-section').style.display = 'block';
+                for (let i = 0; i < files.length; i++) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        container.appendChild(img);
+                    }
+                    reader.readAsDataURL(files[i]);
+                }
+            }
         }
 
-        body {
-            font-family: Arial, Tahoma, sans-serif;
-            background: #f5f7fb;
-            color: #172033;
-            min-height: 100vh;
-        }
+        function processImages() {
+            const fileInput = document.getElementById('file-input');
+            if (fileInput.files.length === 0) {
+                alert("Please select images first.");
+                return;
+            }
 
-        header {
-            background: white;
-            border-bottom: 1px solid #e5e7eb;
-            padding: 16px 20px;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('download-links').style.display = 'none';
 
-        .nav {
-            max-width: 1100px;
-            margin: auto;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
+            const formData = new FormData();
+            for (let i = 0; i < fileInput.files.length; i++) {
+                formData.append('file', fileInput.files[i]);
+            }
 
-        .logo {
-            font-size: 24px;
-            font-weight: bold;
-            color: #2563eb;
+            fetch(WEB_APP_URL, {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('loading').style.display = 'none';
+                if (data.status === "success") {
+                    document.getElementById('pdf-download').href = data.pdf_url;
+                    document.getElementById('excel-download').href = data.excel_url;
+                    document.getElementById('download-links').style.display = 'block';
+                } else {
+                    alert("Error: " + (data.message || "An error occurred during processing."));
+                }
+            })
+            .catch(error => {
+                document.getElementById('loading').style.display = 'none';
+                alert("Connection error with the server. Please check your internet connection.");
+            });
         }
-
-        .logo span {
-            color: #111827;
-        }
-
-        .nav-text {
-            color: #6b7280;
-            font-size: 14px;
-        }
-
-        main {
-            max-width: 1000px;
-            margin: auto;
-            padding: 35px 18px;
-        }
-
-        .hero {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .hero h1 {
-            font-size: 38px;
-            margin-bottom: 12px;
-        }
-
-        .hero h1 span {
-            color: #2563eb;
-        }
-
-        .hero p {
-            color: #667085;
-            font-size: 17px;
-            line-height: 1.8;
-        }
-
-        /* الإعلان */
-        .ad {
-            max-width: 728px;
-            min-height: 90px;
-            margin: 20px auto;
-            background: #eef1f5;
-            border: 1px dashed #cbd5e1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: #94a3b8;
-            border-radius: 10px;
-            font-size: 13px;
-        }
-
-        .card {
-            background: white;
-            border-radius
+    </script>
+</body>
+</html>
